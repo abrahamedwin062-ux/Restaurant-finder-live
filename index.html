@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chop Near Me – Restaurant Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f1f4ef;--surface:#fff;--ink:#14302a;--muted:#5d6f69;--accent:#e59a0e;--accent-ink:#2b1c00;--line:#d5ddd6;--chip:#e3eae4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1c19;--surface:#172a25;--ink:#eaf1ec;--muted:#9fb3ab;--accent:#f0b035;--accent-ink:#2b1c00;--line:#274039;--chip:#1f362f}}
+:root[data-theme="dark"]{--bg:#0f1c19;--surface:#172a25;--ink:#eaf1ec;--muted:#9fb3ab;--accent:#f0b035;--accent-ink:#2b1c00;--line:#274039;--chip:#1f362f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:clamp(2.2rem,8vw,3.4rem);line-height:1;margin:12px 0 8px;font-weight:800;letter-spacing:-.03em}
+.sub{color:var(--muted);margin:0 0 20px;max-width:46ch}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input[type=search],select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;min-width:0}
+input[type=search]{flex:1 1 200px}
+button{font:inherit;cursor:pointer}
+.loc{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:11px 14px;font-weight:600}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px}
+.chip{flex:none;background:var(--chip);color:var(--ink);border:1.5px solid transparent;border-radius:99px;padding:6px 14px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+#status{color:var(--muted);font-size:.92rem;margin:4px 0 14px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:2px 12px}
+li h2{margin:0;font-size:1.15rem;line-height:1.25}
+.dist{font-weight:800;font-size:1.25rem;text-align:right;white-space:nowrap}
+.dist small{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.meta{color:var(--muted);font-size:.92rem}
+.tags{grid-column:1/-1;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.badge{border:1.5px solid var(--line);border-radius:6px;padding:1px 8px;font-size:.82rem}
+.open{border-color:var(--accent)}
+a.dir{margin-left:auto;color:var(--ink);font-weight:600;font-size:.92rem}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px}
+.note{margin-top:28px;color:var(--muted);font-size:.85rem}
+:root{--glass:rgba(255,255,255,.38);--glass-strong:rgba(255,255,255,.62);--glass-line:rgba(255,255,255,.75);--glass-shadow:rgba(20,48,42,.16)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--glass:rgba(255,255,255,.08);--glass-strong:rgba(23,42,37,.62);--glass-line:rgba(255,255,255,.2);--glass-shadow:rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--glass:rgba(255,255,255,.08);--glass-strong:rgba(23,42,37,.62);--glass-line:rgba(255,255,255,.2);--glass-shadow:rgba(0,0,0,.4)}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-kerning:normal;font-feature-settings:"kern","liga";min-height:100vh;background:radial-gradient(60vmax 50vmax at 8% 0%,#f6b94a99,transparent 60%),radial-gradient(55vmax 55vmax at 100% 25%,#4fb8a399,transparent 60%),radial-gradient(60vmax 60vmax at 30% 100%,#7aa7e899,transparent 60%),var(--bg);background-attachment:fixed}
+li,input[type=search],select,.chip{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--glass-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.12),0 10px 30px var(--glass-shadow)}
+li{position:relative;isolation:isolate;overflow:hidden}
+li::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.3),transparent 45%);pointer-events:none}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+button,.chip,li,select,input{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,background-color .28s}
+button:active{transform:scale(.96)}
+.dir{margin-left:auto;font-weight:600;font-size:.92rem;color:var(--accent-ink);background:var(--accent);border:0;border-radius:99px;padding:7px 14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.mp{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(10,24,20,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:pop .3s cubic-bezier(.2,.8,.2,1)}
+.mp[hidden]{display:none}
+.mp .card{width:100%;max-width:640px;background:var(--glass-strong);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-line);border-radius:22px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 24px 60px var(--glass-shadow)}
+.mh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.mh h2{margin:0;font-size:1.25rem}
+.x{background:var(--chip);color:var(--ink);border:1px solid var(--glass-line);border-radius:99px;padding:6px 14px;font-weight:600}
+#mv{display:block;width:100%;height:auto;border-radius:14px;background:var(--glass);border:1px solid var(--glass-line)}
+.mg{stroke:var(--ink);stroke-opacity:.09}
+.rt{stroke:var(--ink);stroke-width:3;stroke-dasharray:2 8;stroke-linecap:round;fill:none}
+.pm{fill:var(--accent);stroke:#fff;stroke-width:3}
+.pu{fill:#2f7de1;stroke:#fff;stroke-width:3}
+.pr{fill:#2f7de1;fill-opacity:.2}
+.tl{fill:var(--ink);font:600 14px "Bricolage Grotesque",system-ui,sans-serif;text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round}
+.mf{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:12px}
+.go{background:var(--ink);color:var(--bg);text-decoration:none;font-weight:600;border-radius:99px;padding:9px 16px}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::before{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Hungry? Find food close by.</h1>
+<p class="sub">Search by name or area, filter by cuisine, and sort by how far each place is from you.</p>
+
+<div class="bar">
+  <input type="search" id="q" placeholder="Search name or area" aria-label="Search restaurants">
+  <select id="sort" aria-label="Sort by">
+    <option value="dist">Nearest first</option>
+        <option value="price">Lowest price</option>
+  </select>
+  <select id="rad" aria-label="Distance">
+    <option value="0">Any distance</option>
+    <option value="2">Within 2 km</option>
+    <option value="5">Within 5 km</option>
+    <option value="10">Within 10 km</option>
+    <option value="25">Within 25 km</option>
+  </select>
+  <button class="loc" id="loc" type="button">Use my location</button>
+</div>
+<div class="chips" id="chips" role="group" aria-label="Cuisine filter"></div>
+<div id="status" role="status" aria-live="polite"></div>
+<ul id="list"></ul>
+
+<div id="mp" class="mp" hidden role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="card">
+    <div class="mh"><div><h2 id="mt"></h2><div class="meta" id="ms"></div></div><button type="button" id="mx" class="x" aria-label="Close map">Close</button></div>
+    <svg id="mv" viewBox="0 0 600 340" role="img" aria-label="Map showing the route from your location to the restaurant"></svg>
+    <div class="mf"><a id="mg" class="go" target="_blank" rel="noopener">Open in Google Maps</a><span class="meta">Schematic map. Distance is in a straight line.</span></div>
+  </div>
+</div>
+<p class="note">Restaurant data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.</p>
+</main>
+
+<script>
+var ORIGIN={lat:5.5560,lng:-0.1969,label:"central Accra"};
+var me={lat:ORIGIN.lat,lng:ORIGIN.lng,label:ORIGIN.label};
+var R=[];
+var cuisines=["All"],timer=null,seq=0;
+var active="All";
+var $=function(id){return document.getElementById(id)};
+
+function km(a,b,c,d){var t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)*Math.sin(y/2);return 12742*Math.asin(Math.sqrt(h))}
+
+function chips(){
+  $("chips").innerHTML=cuisines.map(function(c){return '<button type="button" class="chip" data-c="'+c+'" aria-pressed="'+(c===active)+'">'+c+'</button>'}).join("");
+}
+$("chips").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;active=b.dataset.c;chips();render()});
+
+function render(){
+  var q=$("q").value.trim().toLowerCase(),s=$("sort").value,rad=+$("rad").value;
+  var rows=R.map(function(x){x.d=km(me.lat,me.lng,x.lat,x.lng);return x}).filter(function(x){
+    return (active==="All"||x.c===active)&&(!rad||x.d<=rad)});
+  rows.sort(function(a,b){return s==="rating"?b.r-a.r:s==="price"?a.p-b.p||a.d-b.d:a.d-b.d});
+  $("status").textContent=rows.length+(rows.length===1?" place":" places")+" near "+me.label+(me.label==="you"?" (live location)":"");
+  $("list").innerHTML=rows.length?rows.map(function(x){
+    var url="https://www.google.com/maps/dir/?api=1&destination="+x.lat+","+x.lng;
+    return '<li><div><h2>'+x.n+'</h2><div class="meta">'+x.c+' in '+x.a+'</div></div>'+
+    '<div class="dist">'+x.d.toFixed(1)+' km<small>away</small></div>'+
+    '<div class="tags">'+(x.r?'<span class="badge">★ '+x.r.toFixed(1)+'</span>':'')+(x.p?'<span class="badge">'+"$".repeat(x.p)+'</span>':'')+'<span class="badge open">'+x.o+'</span>'+
+    '<button type="button" class="dir" data-i="'+R.indexOf(x)+'">Get directions</button></div></li>'}).join(""):
+    '<li class="empty" style="display:block">No matches. Clear the search, pick “All”, or set distance to “Any”.</li>';
+}
+
+var lastBtn=null;
+function openMap(i,btn){
+  var x=R[i],W=600,H=340,pad=80,k=Math.cos(me.lat*Math.PI/180);
+  var dx=Math.abs(x.lng-me.lng)*k,dy=Math.abs(x.lat-me.lat);
+  var s=Math.min((W-2*pad)/Math.max(dx,1e-9),(H-2*pad)/Math.max(dy,1e-9),60000);
+  var mx=(me.lng+x.lng)/2,my=(me.lat+x.lat)/2;
+  function X(g){return W/2+(g-mx)*k*s}
+  function Y(t){return H/2-(t-my)*s}
+  var ax=X(me.lng),ay=Y(me.lat),bx=X(x.lng),by=Y(x.lat);
+  var cx=(ax+bx)/2-(by-ay)*.18,cy=(ay+by)/2+(bx-ax)*.18;
+  var tx=.25*ax+.5*cx+.25*bx,ty=.25*ay+.5*cy+.25*by;
+  var g="";
+  for(var u=0;u<=W;u+=50)g+='<line class="mg" x1="'+u+'" y1="0" x2="'+u+'" y2="'+H+'"/>';
+  for(var v=0;v<=H;v+=50)g+='<line class="mg" x1="0" y1="'+v+'" x2="'+W+'" y2="'+v+'"/>';
+  function L(px,py,t){return '<text class="tl" x="'+Math.max(90,Math.min(W-90,px))+'" y="'+Math.max(22,Math.min(H-12,py))+'">'+t+'</text>'}
+  var up=ay<=by;
+  $("mv").innerHTML=g+'<path class="rt" d="M'+ax+' '+ay+' Q'+cx+' '+cy+' '+bx+' '+by+'"/>'+
+    '<circle class="pr" cx="'+ax+'" cy="'+ay+'" r="22"/><circle class="pu" cx="'+ax+'" cy="'+ay+'" r="8"/>'+
+    '<circle class="pm" cx="'+bx+'" cy="'+by+'" r="11"/>'+
+    L(ax,up?ay-30:ay+42,me.label==="you"?"You":"Central Accra")+
+    L(bx,up?by+36:by-24,x.n)+
+    L(tx,ty-12,km(me.lat,me.lng,x.lat,x.lng).toFixed(1)+" km");
+  $("mt").textContent=x.n;
+  $("ms").textContent=x.c+" in "+x.a;
+  $("mg").href="https://www.google.com/maps/dir/?api=1&destination="+x.lat+","+x.lng;
+  lastBtn=btn;$("mp").hidden=false;$("mx").focus();
+}
+function closeMap(){$("mp").hidden=true;if(lastBtn)lastBtn.focus()}
+$("list").addEventListener("click",function(e){var b=e.target.closest(".dir");if(b)openMap(+b.dataset.i,b)});
+$("mx").addEventListener("click",closeMap);
+$("mp").addEventListener("click",function(e){if(e.target===this)closeMap()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("mp").hidden)closeMap()});
+$("q").addEventListener("input",function(){ask();clearTimeout(timer);timer=setTimeout(load,400)});
+$("rad").addEventListener("change",load);
+$("sort").addEventListener("change",render);
+function load(){
+  var q=$("q").value.trim(),n=++seq,km_=(+$("rad").value||10)*1000;
+  $("status").textContent="Finding restaurants near "+(me.label==="you"?"you":me.label)+"…";
+  fetch("/api/nearby?lat="+me.lat+"&lng="+me.lng+"&radius="+km_+"&q="+encodeURIComponent(q))
+    .then(function(r){if(!r.ok)throw 0;return r.json()})
+    .then(function(d){
+      if(n!==seq)return;
+      R=d.places;
+      cuisines=["All"].concat(R.map(function(x){return x.c}).filter(function(v,i,a){return v&&a.indexOf(v)===i}));
+      if(cuisines.indexOf(active)<0)active="All";
+      chips();render();
+    })
+    .catch(function(){if(n===seq)$("status").textContent="Couldn’t load restaurants. Check your connection and try again."});
+}
+var watching=false,asked=false,last=null;
+function setMe(p){
+  var first=me.label!=="you";
+  me={lat:p.coords.latitude,lng:p.coords.longitude,label:"you"};
+  if(first&&R.some(function(x){return km(me.lat,me.lng,x.lat,x.lng)<=10}))$("rad").value="10";
+  render();
+  if(!last||km(me.lat,me.lng,last.lat,last.lng)>.2){last={lat:me.lat,lng:me.lng};load()}
+}
+function watch(){
+  if(watching)return;watching=true;
+  navigator.geolocation.watchPosition(setMe,function(){},{enableHighAccuracy:true,maximumAge:10000});
+}
+function locate(){
+  if(!navigator.geolocation){$("status").textContent="Location isn’t available in this browser. Showing distances from "+ORIGIN.label+".";return}
+  $("status").textContent="Getting your live location…";
+  navigator.geolocation.getCurrentPosition(function(p){setMe(p);watch()},function(){
+    $("status").textContent="Couldn’t get your location. Allow location access in your browser, then tap “Use my location”. Showing distances from "+ORIGIN.label+".";
+  },{enableHighAccuracy:false,timeout:8000,maximumAge:60000});
+}
+function ask(){if(asked||me.label==="you")return;asked=true;locate()}
+$("loc").addEventListener("click",locate);
+$("q").addEventListener("focus",ask);
+chips();render();load();
+</script>
+</body>
+</html>
