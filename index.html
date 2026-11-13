@@ -67,6 +67,7 @@ button:active{transform:scale(.96)}
 .go{background:var(--ink);color:var(--bg);text-decoration:none;font-weight:600;border-radius:99px;padding:9px 16px}
 @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before{transition:none!important;animation:none!important}}
+.note a{color:var(--ink);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -107,7 +108,7 @@ button:active{transform:scale(.96)}
 var ORIGIN={lat:5.5560,lng:-0.1969,label:"central Accra"};
 var me={lat:ORIGIN.lat,lng:ORIGIN.lng,label:ORIGIN.label};
 var R=[];
-var cuisines=["All"],timer=null,seq=0;
+var cuisines=["All"],timer=null,seq=0,loading=false;
 var active="All";
 var $=function(id){return document.getElementById(id)};
 
@@ -123,14 +124,14 @@ function render(){
   var rows=R.map(function(x){x.d=km(me.lat,me.lng,x.lat,x.lng);return x}).filter(function(x){
     return (active==="All"||x.c===active)&&(!rad||x.d<=rad)});
   rows.sort(function(a,b){return s==="rating"?b.r-a.r:s==="price"?a.p-b.p||a.d-b.d:a.d-b.d});
-  $("status").textContent=rows.length+(rows.length===1?" place":" places")+" near "+me.label+(me.label==="you"?" (live location)":"");
+  $("status").textContent=loading?"Finding restaurants near "+(me.label==="you"?"you":me.label)+"…":rows.length+(rows.length===1?" place":" places")+" near "+me.label+(me.label==="you"?" (live location)":"");
   $("list").innerHTML=rows.length?rows.map(function(x){
     var url="https://www.google.com/maps/dir/?api=1&destination="+x.lat+","+x.lng;
     return '<li><div><h2>'+x.n+'</h2><div class="meta">'+x.c+' in '+x.a+'</div></div>'+
     '<div class="dist">'+x.d.toFixed(1)+' km<small>away</small></div>'+
     '<div class="tags">'+(x.r?'<span class="badge">★ '+x.r.toFixed(1)+'</span>':'')+(x.p?'<span class="badge">'+"$".repeat(x.p)+'</span>':'')+'<span class="badge open">'+x.o+'</span>'+
     '<button type="button" class="dir" data-i="'+R.indexOf(x)+'">Get directions</button></div></li>'}).join(""):
-    '<li class="empty" style="display:block">No matches. Clear the search, pick “All”, or set distance to “Any”.</li>';
+    '<li class="empty" style="display:block">'+(loading?"Loading nearby restaurants…":"No matches. Clear the search, pick “All”, or set distance to “Any”.")+'</li>';
 }
 
 var lastBtn=null;
@@ -170,17 +171,17 @@ $("rad").addEventListener("change",load);
 $("sort").addEventListener("change",render);
 function load(){
   var q=$("q").value.trim(),n=++seq,km_=(+$("rad").value||10)*1000;
-  $("status").textContent="Finding restaurants near "+(me.label==="you"?"you":me.label)+"…";
-  fetch("/api/nearby?lat="+me.lat+"&lng="+me.lng+"&radius="+km_+"&q="+encodeURIComponent(q))
+  loading=true;render();
+  fetch("/api/nearby?lat="+me.lat+"&lng="+me.lng+"&radius="+km_+"&q="+encodeURIComponent(q),{signal:AbortSignal.timeout(28000)})
     .then(function(r){if(!r.ok)throw 0;return r.json()})
     .then(function(d){
       if(n!==seq)return;
-      R=d.places;
+      R=d.places;loading=false;
       cuisines=["All"].concat(R.map(function(x){return x.c}).filter(function(v,i,a){return v&&a.indexOf(v)===i}));
       if(cuisines.indexOf(active)<0)active="All";
       chips();render();
     })
-    .catch(function(){if(n===seq)$("status").textContent="Couldn’t load restaurants. Check your connection and try again."});
+    .catch(function(){if(n===seq){loading=false;render();$("status").textContent="Couldn’t load restaurants. The map data service may be busy. Wait a moment and tap “Use my location” to try again."}});
 }
 var watching=false,asked=false,last=null;
 function setMe(p){
